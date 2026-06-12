@@ -1,3 +1,13 @@
+---
+title: Multi-Agent Loan Underwriting AI
+emoji: 🏦
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # Multi-Agent Loan Underwriting AI
 
 A production-ready loan underwriting pipeline built with **LangGraph**, **Groq LLaMA 3.3-70B**, and **Langfuse observability**. The system routes each application through six specialised agents, pauses for a human credit officer on borderline cases (Human-in-the-Loop), and generates a formal decision letter in both English and Hindi.

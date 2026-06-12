@@ -1,0 +1,55 @@
+# ── LangChain / LangGraph stack ───────────────────────────────────────────────
+# All packages are pinned to <2.0.0 / <1.0.0 to guard against future breaking
+# changes. The LangChain ecosystem has moved to a 1.x series (langchain,
+# langchain-core, langgraph, langchain-groq) and a 0.4.x series
+# (langchain-community). 
+langchain>=1.0.0,<2.0.0
+langchain-core>=1.4.0,<2.0.0
+langchain-groq>=1.0.0,<2.0.0
+langchain-community>=0.3.0,<1.0.0
+langgraph>=1.0.0,<2.0.0
+ 
+# ── PDF extraction ────────────────────────────────────────────────────────────
+# PyMuPDF (import name: fitz) — layout-aware PDF loader used by document_parser.
+# PyMuPDFLoader in langchain-community wraps this library.
+pymupdf>=1.23.0
+ 
+# ── Checkpointer — PostgreSQL (production / Azure) ────────────────────────────
+# Only needed when APP_ENV=production and DATABASE_URL is set.
+langgraph-checkpoint-postgres>=2.0.0,<4.0.0
+psycopg[binary]>=3.1.0
+psycopg-pool>=3.2.0          # ConnectionPool for PostgresSaver in production
+ 
+# ── Observability — Langfuse ──────────────────────────────────────────────────
+# langfuse-langchain is a required companion package for Langfuse v2 + LangChain 1.x.
+# Without it, `from langfuse.callback import CallbackHandler` raises:
+#   ModuleNotFoundError: Please install langchain to use the Langfuse langchain integration
+# because Langfuse v2's callback module internally imports removed legacy LangChain modules
+# (langchain.callbacks.base, langchain.schema.agent) that were dropped in LangChain 1.x.
+# langfuse-langchain==2.60.10.1 is the compatibility shim that fixes this.
+# Reference: https://pypi.org/project/langfuse-langchain/
+langfuse==2.60.10
+langfuse-langchain==2.60.10.1
+ 
+# ── ML risk model ─────────────────────────────────────────────────────────────
+
+scikit-learn>=1.4.0
+numpy>=1.26.0
+joblib>=1.4.0
+ 
+# ── App ───────────────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+python-dotenv>=1.0.0
+
+# ── REST API ──────────────────────────────────────────────────────────────────
+# FastAPI + uvicorn expose the underwriting graph as a REST endpoint so it
+# can be called programmatically from a Loan Origination System (LOS) or
+# any backend service — not just the Streamlit UI.
+# Reference: https://fastapi.tiangolo.com/deployment/
+fastapi>=0.111.0,<1.0.0
+uvicorn[standard]>=0.29.0
+ 
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+ 

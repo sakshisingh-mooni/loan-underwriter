@@ -1,0 +1,34 @@
+# pyproject.toml
+# ---------------
+# Project metadata and pytest configuration for the Loan Underwriting AI project.
+#
+# pytest configuration reference:
+#   https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
+#
+# pytest-asyncio configuration reference:
+#   https://pytest-asyncio.readthedocs.io/en/latest/reference/modes/index.html
+
+[project]
+name = "loan-underwriter"
+version = "1.0.0"
+requires-python = ">=3.10"
+description = "Multi-Agent Loan Underwriting AI — LangGraph, Groq, Langfuse"
+
+[tool.pytest.ini_options]
+# testpaths: pytest only collects tests from these directories.
+# evals/ is intentionally excluded — eval_llm_agents.py is a standalone script,
+# not a pytest suite. It requires live API keys (GROQ, Langfuse) and makes real
+# LLM calls; running it via pytest alongside unit tests would make CI slow and
+# fragile. Run it separately: python evals/eval_llm_agents.py
+# Reference: https://docs.pytest.org/en/stable/reference/customize.html#testpaths
+testpaths = ["tests"]
+
+# asyncio_mode: required by pytest-asyncio >= 0.21 to suppress DeprecationWarning
+# and to explicitly declare how async tests are discovered and run.
+# "auto" mode: all async test functions are automatically treated as asyncio tests
+# without needing @pytest.mark.asyncio decorators.
+# This project's current test suite is fully synchronous (rule_engine tests),
+# but the setting is declared explicitly so adding async tests later works
+# without configuration changes.
+# Reference: https://pytest-asyncio.readthedocs.io/en/latest/reference/modes/index.html
+asyncio_mode = "auto"

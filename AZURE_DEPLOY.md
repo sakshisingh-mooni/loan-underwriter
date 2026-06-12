@@ -86,7 +86,7 @@ az webapp config appsettings set \
         GROQ_API_KEY="<your-groq-key>" \
         LANGFUSE_PUBLIC_KEY="<your-langfuse-public-key>" \
         LANGFUSE_SECRET_KEY="<your-langfuse-secret-key>" \
-        LANGFUSE_HOST="https://cloud.langfuse.com" \
+        LANGFUSE_HOST=https://jp.cloud.langfuse.com \
         APP_ENV="production" \
         DATABASE_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_SERVER}.postgres.database.azure.com:5432/${PG_DB}?sslmode=require"
 ```

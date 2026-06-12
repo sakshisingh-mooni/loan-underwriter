@@ -43,7 +43,25 @@ Applicant Input
 **Checkpointer:** `MemorySaver` in development, `PostgresSaver` (Azure PostgreSQL) in production. PostgresSaver ensures HITL checkpoints survive container restarts on Azure App Service.
 
 ---
+## Screenshots
 
+| Form | Approve | HITL Panel |
+|------|---------|------------|
+| ![](screenshots/01_form.png) | ![](screenshots/02_approve_result.png) | ![](screenshots/03_hitl_panel.png) |
+
+| Reject | Langfuse Traces | FastAPI Swagger |
+|--------|----------------|-----------------|
+| ![](screenshots/04_reject_result.png) | ![](screenshots/05_langfuse_traces.png) | ![](screenshots/06_swagger_ui.png) |
+
+---
+## Demo
+
+### Human-in-the-Loop (HITL) — Graph pauses for credit officer review
+![HITL Demo](screenshots/hitl_demo.gif)
+
+---
+### Full Demo (1:59)
+[![Demo Video](screenshots/01_form.png)](https://youtu.be/lTuAOtFdx80)
 ## Stack
 
 | Layer | Technology |

@@ -113,7 +113,11 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Open .env and fill in GROQ_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
+# Open .env and fill in:
+#   GROQ_API_KEY        — from console.groq.com
+#   LANGFUSE_PUBLIC_KEY — from cloud.langfuse.com → Project Settings
+#   LANGFUSE_SECRET_KEY — from cloud.langfuse.com → Project Settings
+#   API_KEY             — any strong string you choose (used to authenticate REST API calls)
 ```
 
 ### 4. Train the risk model (optional)
@@ -170,7 +174,11 @@ Langfuse is pinned to `langfuse==2.60.10` with the `langfuse-langchain==2.60.10.
 pytest tests/ -v
 ```
 
-`tests/test_rule_engine.py` covers 16 cases: EMI formula correctness (standard reducing-balance, zero-interest, zero-tenure, comparison against old approximation), FOIR boundary (pass / fail), loan-to-income ratio, CIBIL threshold (pass / fail), age boundaries (min, max, in-range), document confidence, negative net worth, clean-applicant pass, parsed income override, and multiple simultaneous violations.
+Two test files, 20 cases total:
+
+`tests/test_rule_engine.py` — 16 cases: EMI formula correctness (standard reducing-balance, zero-interest, zero-tenure, comparison against old approximation), FOIR boundary (pass / fail), loan-to-income ratio, CIBIL threshold (pass / fail), age boundaries (min, max, in-range), document confidence, negative net worth, clean-applicant pass, parsed income override, and multiple simultaneous violations.
+
+`tests/test_decision_engine.py` — 4 cases: Approve on clean profile (0 flags, Low risk → confidence 0.80), Reject on 2+ flags (confidence 0.85), Reject on High risk with 0 flags (confidence 0.75), and the HITL guard path (hitl_decision already set returns directly without reaching `interrupt()`). The Refer path is intentionally excluded — it triggers `interrupt()` internally and requires the full compiled graph, not a unit test.
 
 ---
 
@@ -212,11 +220,12 @@ uvicorn api:app --reload --port 8080
 | `/health` | GET | Liveness check |
 | `/docs` | GET | Auto-generated OpenAPI / Swagger UI |
 
-Example:
+Authentication: `POST /underwrite` and `POST /underwrite/resume` require an `X-API-Key` header. Set `API_KEY` in your `.env` file (any strong string you choose). `/health` and `GET /underwrite/{thread_id}` are unprotected. The Swagger UI at `/docs` shows a 🔒 Authorize button to enter your key.
 
 ```bash
 curl -X POST http://localhost:8080/underwrite \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key-here" \
   -d '{"applicant_name":"Arjun Mehta","applicant_age":32,"annual_income":1200000,
        "loan_amount_requested":3000000,"loan_purpose":"Home Purchase",
        "employment_type":"Salaried","existing_obligations":10000,
@@ -247,7 +256,8 @@ loan_underwriter/
 ├── models/
 │   └── .gitkeep              # Directory placeholder; .joblib generated at runtime
 ├── tests/
-│   └── test_rule_engine.py   # 16 unit tests for the rule engine
+│   ├── test_rule_engine.py       # 16 unit tests for the rule engine
+│   └── test_decision_engine.py   # 4 unit tests for decision engine (Approve/Reject/HITL guard)
 ├── app.py                    # Streamlit frontend
 ├── api.py                    # FastAPI REST layer (POST /underwrite, HITL resume, state polling)
 ├── graph.py                  # LangGraph StateGraph definition + conditional routing + checkpointer

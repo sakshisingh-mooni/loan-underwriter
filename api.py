@@ -68,7 +68,10 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
+import os
+
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 
 from graph import build_graph, get_initial_state
@@ -76,6 +79,34 @@ from langgraph.types import Command
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s — %(message)s")
+
+# ── API key authentication ─────────────────────────────────────────────────────
+# Protects /underwrite and /underwrite/resume from unauthenticated callers.
+# In production (Azure), set API_KEY as an Application Setting.
+# For local dev the fallback is "demo-key-change-in-production".
+#
+# Usage: pass the key as a request header:
+#   curl -H "X-API-Key: your-key" -X POST .../underwrite ...
+#
+# /health and GET /underwrite/{thread_id} are intentionally left unprotected:
+#   /health  — Azure App Service liveness probe must reach it without auth.
+#   GET state — read-only polling; no sensitive write operations.
+#
+# auto_error=False means a missing/wrong key returns our custom 403,
+# not FastAPI's default 403 with a different message shape.
+# Reference: https://fastapi.tiangolo.com/tutorial/security/api-key/
+API_KEY = os.environ.get("API_KEY", "demo-key-change-in-production")
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def _verify_api_key(api_key: str = Depends(_api_key_header)) -> None:
+    """FastAPI dependency — raises 403 if the X-API-Key header is missing or wrong."""
+    if api_key != API_KEY:
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid or missing API key. Pass X-API-Key header.",
+        )
+
 
 # ── Shared graph instance ──────────────────────────────────────────────────────
 # Built once at import time, same lifecycle as the Streamlit app.
@@ -232,7 +263,7 @@ def health() -> dict:
     return {"status": "ok", "graph_nodes": list(_graph.nodes)}
 
 
-@app.post("/underwrite", response_model=UnderwriteResponse)
+@app.post("/underwrite", response_model=UnderwriteResponse, dependencies=[Depends(_verify_api_key)])
 def underwrite(req: UnderwriteRequest) -> UnderwriteResponse:
     """
     Submit a loan application and run the full underwriting pipeline.
@@ -295,7 +326,7 @@ def underwrite(req: UnderwriteRequest) -> UnderwriteResponse:
     return response
 
 
-@app.post("/underwrite/resume", response_model=UnderwriteResponse)
+@app.post("/underwrite/resume", response_model=UnderwriteResponse, dependencies=[Depends(_verify_api_key)])
 def underwrite_resume(req: HITLResumeRequest) -> UnderwriteResponse:
     """
     Resume a paused Refer case with the credit officer's decision.

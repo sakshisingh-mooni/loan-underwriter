@@ -3,7 +3,7 @@
 ## Prerequisites
 - Azure CLI installed and logged in (`az login`)
 - Python 3.11 virtual environment working locally
-- All 5 environment variables from `.env.example` ready
+- All 6 environment variables from `.env.example` ready
 
 ---
 
@@ -201,8 +201,14 @@ az webapp config appsettings set \
         LANGFUSE_SECRET_KEY="<your-langfuse-secret-key>" \
         LANGFUSE_HOST="https://cloud.langfuse.com" \
         APP_ENV="production" \
-        DATABASE_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_SERVER}.postgres.database.azure.com:5432/${PG_DB}?sslmode=require"
+        DATABASE_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_SERVER}.postgres.database.azure.com:5432/${PG_DB}?sslmode=require" \
+        API_KEY="<choose-a-strong-api-key>"
 ```
+
+> **Note:** `API_KEY` is required only on the API App Service, not the Streamlit app.
+> The Streamlit UI calls the LangGraph graph directly (in-process) and does not go
+> through the REST layer. Pass this key as the `X-API-Key` header on all calls to
+> `POST /underwrite` and `POST /underwrite/resume`.
 
 ### Step C — Set the startup command
 
@@ -241,6 +247,7 @@ curl "${API_URL}/health"
 # Submit a test application
 curl -X POST "${API_URL}/underwrite" \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: <your-api-key>" \
   -d '{
     "applicant_name": "Arjun Mehta",
     "applicant_age": 32,
@@ -262,6 +269,7 @@ echo "Swagger UI: ${API_URL}/docs"
 | Symptom | Cause | Fix |
 |---|---|---|
 | `uvicorn: command not found` | `uvicorn[standard]` not installed | Confirm `uvicorn[standard]>=0.29.0` is in `requirements.txt` |
+| `{"detail":"Invalid or missing API key..."}` (403) | `X-API-Key` header missing or wrong | Pass `-H "X-API-Key: <your-key>"` in curl; confirm `API_KEY` app setting matches |
 | `{"detail":"Graph execution failed: ..."}` | Missing env vars on API app | Re-run Step B; check `az webapp config appsettings list --name $API_APP` |
 | HITL `/resume` returns 500 after restart | MemorySaver wiped | Confirm `APP_ENV=production` and `DATABASE_URL` are set on the API app |
 | `Application Error` on cold start | Model training timed out | Commit `models/underwriting_risk_model.joblib` to git to skip training on startup |
